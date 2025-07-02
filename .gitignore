@@ -1,7 +1,5 @@
 ### go-metrics Project-specific ###
-proto/*
-!proto/gen.go
-!proto/*.proto
+proto/gen
 
 # Created by https://www.toptal.com/developers/gitignore/api/goland,macos,visualstudiocode,linux,windows
 # Edit at https://www.toptal.com/developers/gitignore?templates=goland,macos,visualstudiocode,linux,windows
@@ -15,9 +13,6 @@ proto/*
 
 # CMake
 cmake-build-*/
-
-# Mongo Explorer plugin
-.idea/**/mongoSettings.xml
 
 # File-based project format
 *.iws
