@@ -48,7 +48,7 @@ message ListAlertsResponse {
 }
 
 // Device service for handling device metrics and configuration
-service DeviceMgmt {
+service DeviceMgmtService {
   // CreateMetric accepts metrics data from a device
   rpc CreateMetric(CreateMetricRequest) returns (Metric) {
     option (google.api.http) = {

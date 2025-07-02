@@ -9,9 +9,9 @@ option go_package = "github.com/greenvine/go-metrics/proto/core/v1";
 
 message Healthz {}
 
-service HealthService {
+service ObservabilityService {
   // Get returns the health status of the service
-  rpc Get(google.protobuf.Empty) returns (Healthz) {
+  rpc GetHealthInfo(google.protobuf.Empty) returns (Healthz) {
     option (google.api.http) = {get: "/v1/healthz"};
   }
 }

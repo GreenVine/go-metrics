@@ -7,5 +7,5 @@ import (
 )
 
 func RegisterServices(s *grpc.Server) {
-	corev1.RegisterHealthServiceServer(s, service.NewHealthService())
+	corev1.RegisterObservabilityServiceServer(s, service.NewObservabilityService())
 }
