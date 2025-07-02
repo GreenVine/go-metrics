@@ -1,28 +1,28 @@
 package service
 
 import (
-  "context"
-  "time"
+	"context"
+	"time"
 
-  "github.com/greenvine/go-metrics/proto/gen/core/v1"
-  "google.golang.org/protobuf/types/known/emptypb"
+	"github.com/greenvine/go-metrics/proto/gen/core/v1"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-// ObservabilityService implements the ObservabilityService gRPC service.
-type ObservabilityService struct {
-  corev1.UnimplementedObservabilityServiceServer
+// ObservabilityV1Service implements the ObservabilityService V1 gRPC service.
+type ObservabilityV1Service struct {
+	corev1.UnimplementedObservabilityServiceServer
 
-  startTime time.Time
+	startTime time.Time
 }
 
-// NewObservabilityService creates a new instance of the health service.
-func NewObservabilityService() *ObservabilityService {
-  return &ObservabilityService{
-    startTime: time.Now(),
-  }
+// NewObservabilityV1Service creates a new instance of the health V1 service.
+func NewObservabilityV1Service() *ObservabilityV1Service {
+	return &ObservabilityV1Service{
+		startTime: time.Now(),
+	}
 }
 
 // GetHealthInfo returns the health status of the service.
-func (s *ObservabilityService) GetHealthInfo(ctx context.Context, _ *emptypb.Empty) (*corev1.Healthz, error) {
-  return &corev1.Healthz{}, nil
+func (s *ObservabilityV1Service) GetHealthInfo(ctx context.Context, _ *emptypb.Empty) (*corev1.Healthz, error) {
+	return &corev1.Healthz{}, nil
 }

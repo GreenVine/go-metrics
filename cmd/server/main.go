@@ -9,7 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/greenvine/go-metrics/internal/server/registry"
+	"github.com/greenvine/go-metrics/internal/server/serving"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -30,9 +30,11 @@ func main() {
 	}
 
 	// Create the server with reflection support.
-	server := grpc.NewServer()
+	server := grpc.NewServer(
+		grpc.UnaryInterceptor(serving.LoggingInterceptor),
+	)
 	reflection.Register(server)
-	registry.RegisterServices(server)
+	serving.RegisterServices(server)
 
 	log.Printf("Starting metrics server on %s", listener.Addr().String())
 	go func() {
