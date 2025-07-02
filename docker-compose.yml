@@ -1,0 +1,20 @@
+services:
+  metrics-server:
+    build:
+      context: .
+      dockerfile: .docker/metrics-server.Dockerfile
+    expose:
+      - 3000
+
+  envoy:
+    image: envoyproxy/envoy:distroless-v1.34-latest
+    ports:
+      # Admin Port
+      - "127.0.0.1:8000:8000"
+      # gRPC /
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./envoy/api-gateway.yaml:/etc/envoy/envoy.yaml:ro
+      - ./proto/gen/descriptors.binpb:/run/proto/descriptors.binpb:ro
+    depends_on:
+      - metrics-server
