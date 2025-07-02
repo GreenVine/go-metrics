@@ -1,0 +1,25 @@
+edition = "2023";
+
+package greenvine.gometrics.device.v1;
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/greenvine/go-metrics/proto/device/v1";
+
+// Metric represents device telemetry data.
+message Metric {
+  // Metric resource name.
+  // Format: devices/{device_id}/metrics/{metric_id}.
+  string name = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Timestamp when the metric was recorded.
+  google.protobuf.Timestamp create_time = 2;
+
+  // Temperature reading.
+  float temperature = 3;
+
+  // Battery level percentage.
+  int32 battery = 4;
+}

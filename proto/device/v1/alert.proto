@@ -1,0 +1,41 @@
+edition = "2023";
+
+package greenvine.gometrics.device.v1;
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/greenvine/go-metrics/proto/device/v1";
+
+// Reason for the alert
+enum AlertReason {
+  // Unspecified alert reason
+  ALERT_REASON_UNSPECIFIED = 0;
+
+  // Alert triggered by temperature threshold breach
+  ALERT_REASON_TEMPERATURE = 1;
+
+  // Alert triggered by battery threshold breach
+  ALERT_REASON_BATTERY = 2;
+}
+
+// Alert represents a notification triggered by threshold breach
+message Alert {
+  // Resource name of the alert.
+  // Format: devices/{device_id}/alerts/{alert_id}
+  string name = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Timestamp when the alert was created
+  google.protobuf.Timestamp create_time = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Reason for the alert.
+  AlertReason reason = 3;
+
+  // The actual value that triggered the alert
+  float value = 4;
+
+  // The threshold that was breached
+  float threshold = 5;
+}

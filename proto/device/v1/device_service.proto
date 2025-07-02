@@ -1,0 +1,75 @@
+edition = "2023";
+
+package greenvine.gometrics.device.v1;
+
+import "device/v1/alert.proto";
+import "device/v1/config.proto";
+import "device/v1/metric.proto";
+import "google/api/annotations.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/greenvine/go-metrics/proto/device/v1";
+
+message CreateMetricRequest {
+  // Resource name of the device.
+  // Format: devices/{device_id}
+  string parent = 1;
+
+  // Metric to be created.
+  Metric metric = 2;
+}
+
+message UpsertConfigRequest {
+  // Resource name of the device.
+  // Format: devices/{device_id}
+  string parent = 1;
+
+  // Device configuration.
+  Config config = 2;
+}
+
+// ListAlertsRequest specifies the device for which to retrieve alerts
+message ListAlertsRequest {
+  // Resource name of the device.
+  // Format: devices/{device_id}
+  string parent = 1;
+
+  // The maximum number of alerts to return.
+  int32 page_size = 2;
+}
+
+// ListAlertsResponse contains alerts for a specific device
+message ListAlertsResponse {
+  // List of alerts for the requested device
+  repeated Alert alerts = 1;
+}
+
+// Device service for handling device metrics and configuration
+service DeviceMgmt {
+  // CreateMetric accepts metrics data from a device
+  rpc CreateMetric(CreateMetricRequest) returns (Metric) {
+    option (google.api.http) = {
+      post: "/v1/{parent=devices/*}/metrics"
+      body: "metric"
+    };
+    option (google.api.method_signature) = "parent,metric";
+  }
+
+  // UpsertConfig upserts configuration for a specific device
+  rpc UpsertConfig(UpsertConfigRequest) returns (Config) {
+    option (google.api.http) = {
+      post: "/v1/{parent=devices/*}/config"
+      body: "config"
+    };
+    option (google.api.method_signature) = "parent,config";
+  }
+
+  // ListAlerts retrieves recent alerts for a device
+  rpc ListAlerts(ListAlertsRequest) returns (ListAlertsResponse) {
+    option (google.api.http) = {get: "/v1/{parent=devices/*}/alerts"};
+    option (google.api.method_signature) = "parent";
+  }
+}

@@ -1,0 +1,23 @@
+edition = "2023";
+
+package greenvine.gometrics.device.v1;
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/greenvine/go-metrics/proto/device/v1";
+
+// Config represents configuration parameters for a device
+message Config {
+  // Resource name - Format: devices/{device_id}/config
+  // This field is output only and will be ignored when sent by the client.
+  string name = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Temperature threshold in Celsius that triggers alerts
+  float temperature_threshold = 2;
+
+  // Battery level threshold percentage (0-100) that triggers alerts
+  int32 battery_threshold = 3;
+}
