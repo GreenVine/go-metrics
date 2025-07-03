@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/greenvine/go-metrics/internal/database"
 	"github.com/greenvine/go-metrics/internal/server/serving"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -19,9 +20,15 @@ const serverLogPrefix = "[metrics-server] "
 func main() {
 	host := flag.String("host", "", "Binding address")
 	port := flag.Int("port", 3000, "Listening port")
+	dbPath := flag.String("dbPath", "go-metrics.db", "Path to SQLite database file")
 	flag.Parse()
 
 	log.SetPrefix(serverLogPrefix)
+
+	// Init database
+	if err := database.Init(*dbPath); err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
 
 	addr := fmt.Sprintf("%s:%d", *host, *port)
 	listener, err := net.Listen("tcp", addr)
