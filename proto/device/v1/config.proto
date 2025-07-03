@@ -11,8 +11,8 @@ option go_package = "github.com/greenvine/go-metrics/proto/device/v1";
 
 // Config represents configuration parameters for a device
 message Config {
-  // Resource name - Format: devices/{device_id}/config
-  // This field is output only and will be ignored when sent by the client.
+  // Resource name of the configuration.
+  // Format: devices/{device_id}/config
   string name = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Temperature threshold in Celsius that triggers alerts

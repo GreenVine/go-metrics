@@ -1,5 +1,6 @@
 ### go-metrics Project-specific ###
 proto/gen
+data/
 
 # Created by https://www.toptal.com/developers/gitignore/api/goland,macos,visualstudiocode,linux,windows
 # Edit at https://www.toptal.com/developers/gitignore?templates=goland,macos,visualstudiocode,linux,windows
