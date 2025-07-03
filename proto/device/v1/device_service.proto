@@ -2,6 +2,7 @@ edition = "2023";
 
 package greenvine.gometrics.device.v1;
 
+import "buf/validate/validate.proto";
 import "device/v1/alert.proto";
 import "device/v1/config.proto";
 import "device/v1/metric.proto";
@@ -14,31 +15,65 @@ import "google/protobuf/timestamp.proto";
 option go_package = "github.com/greenvine/go-metrics/proto/device/v1";
 
 message CreateMetricRequest {
+  option (buf.validate.message).cel = {
+    id: "create_metric_request.metric.name.output_only",
+    message: "metric.name must not be set",
+    expression: "this.metric.name == ''",
+  };
+
   // Resource name of the device.
   // Format: devices/{device_id}
-  string parent = 1;
+  string parent = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string = {
+      pattern: "^devices/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+      example: "devices/12345678-8888-C0DE-BEEF-123456789012"
+    }
+  ];
 
   // Metric to be created.
-  Metric metric = 2;
+  Metric metric = 2 [(buf.validate.field).required = true];
 }
 
 message UpsertConfigRequest {
+  option (buf.validate.message).cel = {
+    id: "upsert_config_request.config.name.output_only",
+    message: "config.name must not be set",
+    expression: "this.config.name == ''",
+  };
+
   // Resource name of the device.
   // Format: devices/{device_id}
-  string parent = 1;
+  string parent = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string = {
+      pattern: "^devices/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+      example: "devices/12345678-8888-C0DE-BEEF-123456789012"
+    }
+  ];
 
   // Device configuration.
-  Config config = 2;
+  Config config = 2 [(buf.validate.field).required = true];
 }
 
 // ListAlertsRequest specifies the device for which to retrieve alerts
 message ListAlertsRequest {
   // Resource name of the device.
   // Format: devices/{device_id}
-  string parent = 1;
+  string parent = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string = {
+      pattern: "^devices/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+      example: "devices/12345678-8888-C0DE-BEEF-123456789012"
+    }
+  ];
 
   // The maximum number of alerts to return.
-  int32 page_size = 2;
+  int32 page_size = 2 [
+    (buf.validate.field).ignore = IGNORE_IF_DEFAULT_VALUE,
+    (buf.validate.field).int32.gte = 1,
+    (buf.validate.field).int32.lte = 100
+  ];
 }
 
 // ListAlertsResponse contains alerts for a specific device

@@ -2,6 +2,7 @@ edition = "2023";
 
 package greenvine.gometrics.device.v1;
 
+import "buf/validate/validate.proto";
 import "google/api/annotations.proto";
 import "google/api/field_behavior.proto";
 import "google/protobuf/empty.proto";
@@ -16,8 +17,12 @@ message Config {
   string name = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Temperature threshold in Celsius that triggers alerts
-  float temperature_threshold = 2;
+  float temperature_threshold = 2 [(buf.validate.field).required = true];
 
   // Battery level threshold percentage (0-100) that triggers alerts
-  int32 battery_threshold = 3;
+  int32 battery_threshold = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).int32.gte = 0,
+    (buf.validate.field).int32.lte = 100
+  ];
 }

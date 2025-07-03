@@ -2,6 +2,7 @@ edition = "2023";
 
 package greenvine.gometrics.device.v1;
 
+import "buf/validate/validate.proto";
 import "google/api/annotations.proto";
 import "google/api/field_behavior.proto";
 import "google/protobuf/timestamp.proto";
@@ -15,11 +16,15 @@ message Metric {
   string name = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Timestamp when the metric was recorded.
-  google.protobuf.Timestamp create_time = 2;
+  google.protobuf.Timestamp create_time = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Temperature reading.
-  float temperature = 3;
+  float temperature = 3 [(buf.validate.field).required = true];;
 
   // Battery level percentage.
-  int32 battery = 4;
+  int32 battery = 4 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).int32.gte = 0,
+    (buf.validate.field).int32.lte = 100
+  ];
 }

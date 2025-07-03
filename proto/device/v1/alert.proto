@@ -31,11 +31,11 @@ message Alert {
   google.protobuf.Timestamp create_time = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Reason for the alert.
-  AlertReason reason = 3;
+  AlertReason reason = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // The actual value that triggered the alert
-  float value = 4;
+  float value = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // The threshold that was breached
-  float threshold = 5;
+  float threshold = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
