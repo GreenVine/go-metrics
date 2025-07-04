@@ -1,3 +1,4 @@
+// Package service contains implementations for RPC services.
 package service
 
 import (
@@ -5,14 +6,15 @@ import (
 	"regexp"
 
 	"github.com/google/uuid"
-	"github.com/greenvine/go-metrics/internal/database"
-	"github.com/greenvine/go-metrics/proto/gen/device/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/greenvine/go-metrics/internal/database"
+	"github.com/greenvine/go-metrics/proto/gen/device/v1"
 )
 
-// deviceIdRegex extracts the device ID from the resource name.
-var deviceIdRegex = regexp.MustCompile(`^devices/([^/]+)`)
+// deviceIDRegex extracts the device ID from the resource name.
+var deviceIDRegex = regexp.MustCompile(`^devices/([^/]+)`)
 
 // DeviceMgmtV1Service implements the DeviceMgmtService V1 gRPC service.
 type DeviceMgmtV1Service struct {
@@ -77,7 +79,7 @@ func (s *DeviceMgmtV1Service) ListAlerts(ctx context.Context, req *devicev1.List
 }
 
 func extractDeviceID(resourceName string) *uuid.UUID {
-	if matches := deviceIdRegex.FindStringSubmatch(resourceName); len(matches) == 2 {
+	if matches := deviceIDRegex.FindStringSubmatch(resourceName); len(matches) == 2 {
 		if parsedUUID, err := uuid.Parse(matches[1]); err == nil {
 			return &parsedUUID
 		}

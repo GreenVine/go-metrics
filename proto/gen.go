@@ -1,3 +1,4 @@
+// Package proto contains generated Protobuf definitions.
 package proto
 
 //go:generate go run github.com/bufbuild/buf/cmd/buf@v1.55.1 generate --clean

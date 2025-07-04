@@ -1,13 +1,14 @@
 package database
 
 import (
+	"database/sql/driver"
 	"time"
 
-	"database/sql/driver"
 	"github.com/google/uuid"
-	"github.com/greenvine/go-metrics/proto/gen/device/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
+
+	"github.com/greenvine/go-metrics/proto/gen/device/v1"
 )
 
 // BaseRecord contains common columns for all tables with a primary key.
@@ -90,6 +91,7 @@ type AlertReason devicev1.AlertReason
 // Scan converts the integer to the Protobuf enum.
 func (r *AlertReason) Scan(value devicev1.AlertReason) error {
 	*r = AlertReason(*value.Enum())
+
 	return nil
 }
 

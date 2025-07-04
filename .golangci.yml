@@ -1,0 +1,83 @@
+version: "2"
+
+formatters:
+  enable:
+    - gofmt
+    - gci
+
+  settings:
+    gofmt:
+      simplify: true
+      rewrite-rules:
+        - pattern: 'interface{}'
+          replacement: 'any'
+
+    gci:
+      sections:
+        - standard
+        - default
+        - localmodule
+
+run:
+  timeout: 5m
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  uniq-by-line: false
+
+linters:
+  default: standard
+
+  exclusions:
+    paths:
+      - proto/gen
+
+  settings:
+    usestdlibvars:
+      http-method: true
+      http-status-code: true
+      time-weekday: true
+      time-layout: true
+
+    staticcheck:
+      checks:
+        - all
+
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment
+
+    gocritic:
+      enable-all: true
+
+    revive:
+      enable-all-rules: true
+      rules:
+        - name: context-as-argument
+          arguments:
+            - allowTypesBefore: "*testing.T"
+
+        - name: exported
+          arguments:
+            - "checkPrivateReceivers"
+            - "sayRepetitiveInsteadOfStutters"
+
+    dupword:
+      ignore: []
+
+    misspell:
+      locale: UK
+      ignore-rules: []
+      extra-words: []
+
+output:
+  sort-order:
+    - linter
+    - severity
+    - file

@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/greenvine/go-metrics/proto/gen/core/v1"
 	"google.golang.org/protobuf/types/known/emptypb"
+
+	"github.com/greenvine/go-metrics/proto/gen/core/v1"
 )
 
 // ObservabilityV1Service implements the ObservabilityService V1 gRPC service.

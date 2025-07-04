@@ -6,10 +6,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/greenvine/go-metrics/proto/gen/device/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
+
+	"github.com/greenvine/go-metrics/proto/gen/device/v1"
 )
 
 // CreateMetric stores a new metric in the database.
@@ -32,7 +33,8 @@ func CreateMetric(deviceID uuid.UUID, metric *devicev1.Metric) (*MetricRecord, e
 		return nil, status.Errorf(codes.Internal, "failed to store metric for device %q: %v", deviceID, result.Error)
 	}
 
-	if err := checkAndMaybeCreateAlerts(metricRecord); err != nil {
+	err := checkAndMaybeCreateAlerts(metricRecord)
+	if err != nil {
 		log.Printf("Failed to process alerts for metric: %v", err)
 		// continue processing even if alert creation has failed.
 	}
@@ -63,6 +65,7 @@ func checkAndMaybeCreateAlerts(metricRecord *MetricRecord) error {
 			},
 		})
 	}
+
 	if metricRecord.Battery < configRecord.BatteryThreshold {
 		alerts = append(alerts, &AlertRecord{
 			DeviceID:  metricRecord.DeviceID,
@@ -77,7 +80,8 @@ func checkAndMaybeCreateAlerts(metricRecord *MetricRecord) error {
 	}
 
 	if len(alerts) > 0 {
-		if err := DB.Create(&alerts).Error; err != nil {
+		err := DB.Create(&alerts).Error
+		if err != nil {
 			return err
 		}
 	}

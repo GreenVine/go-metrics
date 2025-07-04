@@ -27,7 +27,7 @@ message CreateMetricRequest {
     (buf.validate.field).required = true,
     (buf.validate.field).string = {
       pattern: "^devices/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
-      example: "devices/12345678-8888-C0DE-BEEF-123456789012"
+      example: "devices/12345678-8888-C0DE-BEEF-123456789012",
     }
   ];
 
@@ -48,7 +48,7 @@ message UpsertConfigRequest {
     (buf.validate.field).required = true,
     (buf.validate.field).string = {
       pattern: "^devices/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
-      example: "devices/12345678-8888-C0DE-BEEF-123456789012"
+      example: "devices/12345678-8888-C0DE-BEEF-123456789012",
     }
   ];
 
@@ -64,7 +64,7 @@ message ListAlertsRequest {
     (buf.validate.field).required = true,
     (buf.validate.field).string = {
       pattern: "^devices/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
-      example: "devices/12345678-8888-C0DE-BEEF-123456789012"
+      example: "devices/12345678-8888-C0DE-BEEF-123456789012",
     }
   ];
 
