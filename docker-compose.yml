@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: .docker/metrics-server.Dockerfile
+    volumes:
+      - ./data:/opt/server/data
     expose:
       - 3000
 

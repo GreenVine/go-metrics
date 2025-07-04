@@ -6,12 +6,13 @@ WORKDIR /app
 # Copy the source code
 COPY .. .
 
-RUN apk add --no-cache git && \
+# Install required build dependencies
+RUN apk add --no-cache git gcc musl-dev && \
     go mod download && \
     # Generate Protobuf files
     go generate ./... && \
     # Generate binary
-    CGO_ENABLED=0 go build -ldflags="-s -w" -o /usr/local/sbin/metrics-server ./cmd/server
+    CGO_ENABLED=1 go build -ldflags="-s -w" -o /usr/local/sbin/metrics-server ./cmd/server
 
 # Final stage
 FROM alpine:latest
@@ -25,4 +26,4 @@ COPY --from=builder /usr/local/sbin/metrics-server /usr/local/sbin/metrics-serve
 EXPOSE 3000
 
 # Run the binary
-ENTRYPOINT ["/usr/local/sbin/metrics-server", "--host=0.0.0.0"]
+ENTRYPOINT ["/usr/local/sbin/metrics-server", "-host=0.0.0.0", "-dbPath=/opt/server/data/database.db"]

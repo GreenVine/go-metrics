@@ -34,6 +34,6 @@ func Init(dbPath string) error {
 		return result.Error
 	}
 
-	log.Println("Database initialised successfully.")
+	log.Printf("Database initialised successfully: %q", dbPath)
 	return nil
 }
