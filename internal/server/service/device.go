@@ -4,10 +4,12 @@ package service
 import (
 	"context"
 	"regexp"
+	"time"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"gorm.io/gorm"
 
 	"github.com/greenvine/go-metrics/internal/database"
 	"github.com/greenvine/go-metrics/proto/gen/device/v1"
@@ -33,7 +35,17 @@ func (s *DeviceMgmtV1Service) CreateMetric(ctx context.Context, req *devicev1.Cr
 		return nil, status.Errorf(codes.InvalidArgument, "invalid device resource name: %q", req.GetParent())
 	}
 
-	metricRecord, err := database.CreateMetric(*deviceID, req.GetMetric())
+	newCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	var metricRecord *database.MetricRecord
+	var err error
+
+	err = database.WithContext(newCtx).Transaction(func(tx *gorm.DB) error {
+		metricRecord, err = database.CreateMetric(tx, *deviceID, req.GetMetric())
+		return err
+	})
+
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +60,17 @@ func (s *DeviceMgmtV1Service) UpsertConfig(ctx context.Context, req *devicev1.Up
 		return nil, status.Errorf(codes.InvalidArgument, "invalid device resource name: %q", req.GetParent())
 	}
 
-	configRecord, err := database.UpsertConfig(*deviceID, req.GetConfig())
+	newCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	var configRecord *database.ConfigRecord
+	var err error
+
+	err = database.WithContext(newCtx).Transaction(func(tx *gorm.DB) error {
+		configRecord, err = database.UpsertConfig(tx, *deviceID, req.GetConfig())
+		return err
+	})
+
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +90,17 @@ func (s *DeviceMgmtV1Service) ListAlerts(ctx context.Context, req *devicev1.List
 		pageSize = 50 // default page size
 	}
 
-	alerts, err := database.ListAlerts(*deviceID, int(pageSize))
+	newCtx, cancel := context.WithTimeout(ctx, 3*time.Minute)
+	defer cancel()
+
+	var alerts []database.AlertRecord
+	var err error
+
+	err = database.WithContext(newCtx).Transaction(func(tx *gorm.DB) error {
+		alerts, err = database.ListAlerts(tx, *deviceID, int(pageSize))
+		return err
+	})
+
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to retrieve alerts for device %q: %v", deviceID, err)
 	}

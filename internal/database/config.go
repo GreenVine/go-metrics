@@ -10,13 +10,13 @@ import (
 )
 
 // UpsertConfig creates or updates a device configuration.
-func UpsertConfig(deviceID uuid.UUID, config *devicev1.Config) (*ConfigRecord, error) {
+func UpsertConfig(db *gorm.DB, deviceID uuid.UUID, config *devicev1.Config) (*ConfigRecord, error) {
 	// Creates the device if it doesn't exist yet.
-	if _, err := GetOrCreateDevice(deviceID); err != nil {
+	if _, err := getOrCreateDevice(db, deviceID); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create device %q: %v", deviceID, err)
 	}
 
-	configRecord, err := GetDeviceConfig(deviceID)
+	configRecord, err := getDeviceConfig(db, deviceID)
 
 	var upsertResult *gorm.DB
 
@@ -24,7 +24,7 @@ func UpsertConfig(deviceID uuid.UUID, config *devicev1.Config) (*ConfigRecord, e
 		// Config already exists, update it.
 		configRecord.TemperatureThreshold = config.GetTemperatureThreshold()
 		configRecord.BatteryThreshold = config.GetBatteryThreshold()
-		upsertResult = DB.Save(&configRecord)
+		upsertResult = db.Save(&configRecord)
 	} else {
 		// Create a new device config.
 		configRecord = &ConfigRecord{
@@ -32,7 +32,7 @@ func UpsertConfig(deviceID uuid.UUID, config *devicev1.Config) (*ConfigRecord, e
 			TemperatureThreshold: config.GetTemperatureThreshold(),
 			BatteryThreshold:     config.GetBatteryThreshold(),
 		}
-		upsertResult = DB.Create(&configRecord)
+		upsertResult = db.Create(&configRecord)
 	}
 
 	if upsertResult.Error != nil {
@@ -42,11 +42,11 @@ func UpsertConfig(deviceID uuid.UUID, config *devicev1.Config) (*ConfigRecord, e
 	return configRecord, nil
 }
 
-// GetDeviceConfig retrieves the config for a given device.
-func GetDeviceConfig(deviceID uuid.UUID) (*ConfigRecord, error) {
+// getDeviceConfig retrieves the config for a given device.
+func getDeviceConfig(db *gorm.DB, deviceID uuid.UUID) (*ConfigRecord, error) {
 	var configRecord ConfigRecord
 
-	result := DB.First(&configRecord, "device_id = ?", deviceID)
+	result := db.First(&configRecord, "device_id = ?", deviceID)
 	if result.Error != nil {
 		return nil, status.Errorf(codes.Internal, "failed to retrieve config for device %q: %v", deviceID, result.Error)
 	}

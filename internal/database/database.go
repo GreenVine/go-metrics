@@ -2,6 +2,7 @@
 package database
 
 import (
+	"context"
 	"log"
 	"time"
 
@@ -10,13 +11,13 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// DB is a shared database handle.
-var DB *gorm.DB
+// gormDB is the database handle.
+var gormDB *gorm.DB
 
 // Init sets up the database connection and migrates the schema.
 func Init(dbPath string) error {
 	var err error
-	if DB, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{
+	if gormDB, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{
 		DefaultTransactionTimeout: 1 * time.Minute,
 		Logger:                    logger.Default.LogMode(logger.Info),
 		TranslateError:            true,
@@ -25,17 +26,22 @@ func Init(dbPath string) error {
 	}
 
 	// Run schema migrations.
-	err = DB.AutoMigrate(&DeviceRecord{}, &MetricRecord{}, &ConfigRecord{}, &AlertRecord{})
+	err = gormDB.AutoMigrate(&DeviceRecord{}, &MetricRecord{}, &ConfigRecord{}, &AlertRecord{})
 	if err != nil {
 		return err
 	}
 
 	// Enforce foreign key constraints.
-	if result := DB.Exec("PRAGMA foreign_keys = ON"); result.Error != nil {
+	if result := gormDB.Exec("PRAGMA foreign_keys = ON"); result.Error != nil {
 		return result.Error
 	}
 
 	log.Printf("Database initialised successfully: %q", dbPath)
 
 	return nil
+}
+
+// WithContext returns a gormDB handle with the provided context.
+func WithContext(ctx context.Context) *gorm.DB {
+	return gormDB.WithContext(ctx)
 }

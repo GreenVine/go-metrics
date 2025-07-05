@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"errors"
 	"log"
 	"time"
@@ -14,7 +15,7 @@ import (
 )
 
 // CreateMetric stores a new metric in the database.
-func CreateMetric(deviceID uuid.UUID, metric *devicev1.Metric) (*MetricRecord, error) {
+func CreateMetric(db *gorm.DB, deviceID uuid.UUID, metric *devicev1.Metric) (*MetricRecord, error) {
 	now := time.Now()
 	metricRecord := &MetricRecord{
 		DeviceID:    deviceID,
@@ -27,24 +28,30 @@ func CreateMetric(deviceID uuid.UUID, metric *devicev1.Metric) (*MetricRecord, e
 	}
 
 	// Inserts the metric to the database.
-	if result := DB.Create(metricRecord); errors.Is(result.Error, gorm.ErrForeignKeyViolated) {
+	if result := db.Create(metricRecord); errors.Is(result.Error, gorm.ErrForeignKeyViolated) {
 		return nil, status.Errorf(codes.FailedPrecondition, "device %q does not exist", deviceID)
 	} else if result.Error != nil {
 		return nil, status.Errorf(codes.Internal, "failed to store metric for device %q: %v", deviceID, result.Error)
 	}
 
-	err := checkAndMaybeCreateAlerts(metricRecord)
-	if err != nil {
-		log.Printf("Failed to process alerts for metric: %v", err)
-		// continue processing even if alert creation has failed.
-	}
+	// Run alert checks asynchronously in the background.
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+		defer cancel()
+
+		if err := WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+			return checkAndMaybeCreateAlerts(tx, metricRecord)
+		}); err != nil {
+			log.Printf("Failed to check or create alerts for metric record %q: %v", metricRecord.ID, err)
+		}
+	}()
 
 	return metricRecord, nil
 }
 
 // checkAndMaybeCreateAlerts checks if a metric has met alert conditions and creates alerts if needed.
-func checkAndMaybeCreateAlerts(metricRecord *MetricRecord) error {
-	configRecord, err := GetDeviceConfig(metricRecord.DeviceID)
+func checkAndMaybeCreateAlerts(db *gorm.DB, metricRecord *MetricRecord) error {
+	configRecord, err := getDeviceConfig(db, metricRecord.DeviceID)
 	if err != nil {
 		// Skip alert creation since the config cannot be found.
 		return nil
@@ -80,8 +87,7 @@ func checkAndMaybeCreateAlerts(metricRecord *MetricRecord) error {
 	}
 
 	if len(alerts) > 0 {
-		err := DB.Create(&alerts).Error
-		if err != nil {
+		if err := db.Create(&alerts).Error; err != nil {
 			return err
 		}
 	}
