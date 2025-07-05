@@ -9,7 +9,7 @@ managed:
 
   override:
     - file_option: go_package_prefix
-      value: github.com/greenvine/go-metrics
+      value: github.com/greenvine/go-metrics/proto/gen
 
 plugins:
   - local: ["go", "tool", "protoc-gen-go"]
