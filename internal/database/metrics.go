@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 
+	"github.com/greenvine/go-metrics/internal/telemetry"
 	"github.com/greenvine/go-metrics/proto/gen/device/v1"
 )
 
@@ -33,6 +34,8 @@ func CreateMetric(db *gorm.DB, deviceID uuid.UUID, metric *devicev1.Metric) (*Me
 	} else if result.Error != nil {
 		return nil, status.Errorf(codes.Internal, "failed to store metric for device %q: %v", deviceID, result.Error)
 	}
+
+	telemetry.Add(metricRecord.Proto())
 
 	// Run alert checks asynchronously in the background.
 	go func() {
@@ -89,6 +92,11 @@ func checkAndMaybeCreateAlerts(db *gorm.DB, metricRecord *MetricRecord) error {
 	if len(alerts) > 0 {
 		if err := db.Create(&alerts).Error; err != nil {
 			return err
+		}
+
+		// Log alerts to telemetry
+		for _, alert := range alerts {
+			telemetry.Add(alert.Proto())
 		}
 	}
 

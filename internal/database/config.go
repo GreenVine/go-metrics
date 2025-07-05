@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 
+	"github.com/greenvine/go-metrics/internal/telemetry"
 	"github.com/greenvine/go-metrics/proto/gen/device/v1"
 )
 
@@ -38,6 +39,8 @@ func UpsertConfig(db *gorm.DB, deviceID uuid.UUID, config *devicev1.Config) (*Co
 	if upsertResult.Error != nil {
 		return nil, status.Errorf(codes.Internal, "failed to upsert config for device %q: %v", deviceID, upsertResult.Error)
 	}
+
+	telemetry.Add(configRecord.Proto())
 
 	return configRecord, nil
 }

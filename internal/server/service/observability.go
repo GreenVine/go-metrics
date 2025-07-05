@@ -6,6 +6,7 @@ import (
 
 	"google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/greenvine/go-metrics/internal/telemetry"
 	"github.com/greenvine/go-metrics/proto/gen/core/v1"
 )
 
@@ -25,5 +26,7 @@ func NewObservabilityV1Service() *ObservabilityV1Service {
 
 // GetHealthInfo returns the health status of the service.
 func (s *ObservabilityV1Service) GetHealthInfo(ctx context.Context, _ *emptypb.Empty) (*corev1.Healthz, error) {
-	return &corev1.Healthz{}, nil
+	return &corev1.Healthz{
+		ServiceLogs: telemetry.Logs(),
+	}, nil
 }

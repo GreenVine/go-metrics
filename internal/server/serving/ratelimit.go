@@ -134,7 +134,6 @@ func RateLimitInterceptor(limiter RateLimiter) grpc.UnaryServerInterceptor {
 
 func extractRequestMethod(maybeProto any) string {
 	if p, ok := maybeProto.(proto.Message); ok {
-		log.Println(string(p.ProtoReflect().Descriptor().FullName()))
 		return string(p.ProtoReflect().Descriptor().FullName())
 	}
 

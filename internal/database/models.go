@@ -83,6 +83,8 @@ func (c *ConfigRecord) Proto() *devicev1.Config {
 		Name:                 &resourceName,
 		TemperatureThreshold: &c.TemperatureThreshold,
 		BatteryThreshold:     &c.BatteryThreshold,
+		CreateTime:           timestamppb.New(c.CreatedAt),
+		UpdateTime:           timestamppb.New(c.UpdatedAt),
 	}
 }
 
