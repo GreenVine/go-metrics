@@ -47,10 +47,13 @@ func main() {
 		log.Fatalf("Failed to listen on %s: %v", addr, err)
 	}
 
+	rateLimiter := serving.NewTokenBucketRateLimiter(rateLimitConfig)
+
 	// Create the server with reflection support.
 	server := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			serving.LoggingInterceptor,
+			serving.RateLimitInterceptor(rateLimiter),
 			pbvmiddleware.UnaryServerInterceptor(validator),
 		),
 	)

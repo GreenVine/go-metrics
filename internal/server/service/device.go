@@ -28,7 +28,7 @@ func NewDeviceMgmtV1Service() *DeviceMgmtV1Service {
 
 // CreateMetric accepts metrics data from a device.
 func (s *DeviceMgmtV1Service) CreateMetric(ctx context.Context, req *devicev1.CreateMetricRequest) (*devicev1.Metric, error) {
-	deviceID := extractDeviceID(req.GetParent())
+	deviceID := ExtractDeviceID(req.GetParent())
 	if deviceID == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid device resource name: %q", req.GetParent())
 	}
@@ -43,7 +43,7 @@ func (s *DeviceMgmtV1Service) CreateMetric(ctx context.Context, req *devicev1.Cr
 
 // UpsertConfig upserts configuration for a specific device.
 func (s *DeviceMgmtV1Service) UpsertConfig(ctx context.Context, req *devicev1.UpsertConfigRequest) (*devicev1.Config, error) {
-	deviceID := extractDeviceID(req.GetParent())
+	deviceID := ExtractDeviceID(req.GetParent())
 	if deviceID == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid device resource name: %q", req.GetParent())
 	}
@@ -58,7 +58,7 @@ func (s *DeviceMgmtV1Service) UpsertConfig(ctx context.Context, req *devicev1.Up
 
 // ListAlerts retrieves alerts for a device.
 func (s *DeviceMgmtV1Service) ListAlerts(ctx context.Context, req *devicev1.ListAlertsRequest) (*devicev1.ListAlertsResponse, error) {
-	deviceID := extractDeviceID(req.GetParent())
+	deviceID := ExtractDeviceID(req.GetParent())
 	if deviceID == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid device resource name: %q", req.GetParent())
 	}
@@ -78,7 +78,7 @@ func (s *DeviceMgmtV1Service) ListAlerts(ctx context.Context, req *devicev1.List
 	}, nil
 }
 
-func extractDeviceID(resourceName string) *uuid.UUID {
+func ExtractDeviceID(resourceName string) *uuid.UUID {
 	if matches := deviceIDRegex.FindStringSubmatch(resourceName); len(matches) == 2 {
 		if parsedUUID, err := uuid.Parse(matches[1]); err == nil {
 			return &parsedUUID
