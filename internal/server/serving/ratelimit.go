@@ -92,8 +92,8 @@ func (t *TokenBucketRateLimiter) Allow(_ context.Context, fullMethodName string,
 	config, ok := t.configs[fullMethodName]
 	t.RUnlock()
 
-	// Allow the request if no method-specific config is found.
-	if !ok {
+	// Allow the request if no method-specific config is found, or the QPS limit is unconfigured.
+	if !ok || config.QPSLimit < 1 {
 		return true, ""
 	}
 
