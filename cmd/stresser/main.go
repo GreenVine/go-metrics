@@ -12,7 +12,9 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/greenvine/go-metrics/proto/gen/core/v1"
 	"github.com/greenvine/go-metrics/proto/gen/device/v1"
 )
 
@@ -97,7 +99,17 @@ func main() {
 		}
 	}(conn)
 
+	observabilityClient := corev1.NewObservabilityServiceClient(conn)
 	deviceMgmtClient := devicev1.NewDeviceMgmtServiceClient(conn)
+
+	log.Println("Waiting for server to be healthy...")
+	for {
+		if _, err := observabilityClient.GetHealthInfo(context.Background(), &emptypb.Empty{}); err == nil {
+			break
+		}
+
+		time.Sleep(1 * time.Second)
+	}
 
 	log.Println("Configuring devices...")
 
