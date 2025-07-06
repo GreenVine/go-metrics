@@ -1,8 +1,8 @@
 services:
-  metrics-server:
+  server:
     build:
       context: .
-      dockerfile: .docker/metrics-server.Dockerfile
+      dockerfile: .docker/server.Dockerfile
     volumes:
       - ./data:/opt/server/data
     expose:
@@ -13,10 +13,20 @@ services:
     ports:
       # Admin Port
       - "127.0.0.1:8000:8000"
-      # gRPC /
+      # gRPC / HTTP Port
       - "127.0.0.1:8080:8080"
     volumes:
       - ./envoy/api-gateway.yaml:/etc/envoy/envoy.yaml:ro
       - ./proto/gen/descriptors.binpb:/run/proto/descriptors.binpb:ro
     depends_on:
-      - metrics-server
+      - server
+
+  stresser:
+    build:
+      context: .
+      dockerfile: .docker/stresser.Dockerfile
+    depends_on:
+      - envoy
+      - server
+    profiles:
+      - tests

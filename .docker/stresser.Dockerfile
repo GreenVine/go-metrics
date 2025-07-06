@@ -7,12 +7,12 @@ WORKDIR /app
 COPY .. .
 
 # Install required build dependencies
-RUN apk add --no-cache git gcc musl-dev && \
+RUN apk add --no-cache git && \
     go mod download && \
     # Generate Protobuf files
     go generate ./... && \
     # Generate binary
-    CGO_ENABLED=1 go build -ldflags="-s -w" -o /usr/local/sbin/metrics-server ./cmd/server
+    CGO_ENABLED=0 go build -ldflags="-s -w" -o /usr/local/sbin/stresser ./cmd/stresser
 
 # Final stage
 FROM alpine:latest
@@ -20,10 +20,7 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 
 # Copy the binary from the builder stage
-COPY --from=builder /usr/local/sbin/metrics-server /usr/local/sbin/metrics-server
-
-# Expose the gRPC port
-EXPOSE 3000
+COPY --from=builder /usr/local/sbin/stresser /usr/local/sbin/stresser
 
 # Run the binary
-ENTRYPOINT ["/usr/local/sbin/metrics-server", "-host=0.0.0.0", "-dbPath=/opt/server/data/database.db"]
+ENTRYPOINT ["/usr/local/sbin/stresser", "-server=server:3000"]
