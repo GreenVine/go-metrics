@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/proto"
 )
 
 // KeyExtractorFunc is a function that extracts a rate limit key from a request
@@ -124,18 +123,10 @@ func RateLimitInterceptor(limiter RateLimiter) grpc.UnaryServerInterceptor {
 		}
 
 		if allow, rateLimitKey := limiter.Allow(ctx, methodName, req); !allow {
-			log.Printf("Request %q with rate-limit key %q was rejected", info.FullMethod, rateLimitKey)
+			log.Printf("Request %q with rate-limit key %q was rejected", methodName, rateLimitKey)
 			return nil, status.Errorf(codes.ResourceExhausted, "rate limit exceeded")
 		}
 
 		return handler(ctx, req)
 	}
-}
-
-func extractRequestMethod(maybeProto any) string {
-	if p, ok := maybeProto.(proto.Message); ok {
-		return string(p.ProtoReflect().Descriptor().FullName())
-	}
-
-	return ""
 }

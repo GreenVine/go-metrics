@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"buf.build/go/protovalidate"
 	pbvmiddleware "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
@@ -18,15 +20,20 @@ import (
 	"github.com/greenvine/go-metrics/internal/server/serving"
 )
 
-const serverLogPrefix = "[metrics-server] "
+const logPrefix = "[metrics-server] "
 
 func main() {
 	host := flag.String("host", "", "Binding address")
 	port := flag.Int("port", 3000, "Listening port")
 	dbPath := flag.String("dbPath", "go-metrics.db", "Path to SQLite database file")
+	alertGenInterval := flag.Duration("alertGenInterval", 2*time.Second, "Interval between alert generation attempts")
+
 	flag.Parse()
 
-	log.SetPrefix(serverLogPrefix)
+	log.SetPrefix(logPrefix)
+
+	rootCtx, rootCancel := context.WithCancel(context.Background())
+	defer rootCancel()
 
 	// Init request proto validator
 	validator, err := protovalidate.New()
@@ -39,6 +46,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialise database: %v", err)
 	}
+
+	// Init async alert generator with the root context
+	database.InitAlertGenerator(rootCtx, *alertGenInterval)
 
 	addr := fmt.Sprintf("%s:%d", *host, *port)
 
@@ -77,5 +87,5 @@ func main() {
 	log.Println("Metrics server is shutting down...")
 	server.GracefulStop()
 
-	log.Println("Bye.")
+	rootCancel()
 }

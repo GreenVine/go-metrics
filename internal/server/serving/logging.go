@@ -4,15 +4,15 @@ package serving
 import (
 	"context"
 	"log"
-	"strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 )
 
 // LoggingInterceptor creates a UnaryServerInterceptor for logging requests and responses.
 func LoggingInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
-	method := strings.TrimLeft(info.FullMethod, "/")
+	method := extractRequestMethod(req)
 	log.Printf("[%s] req = \"%s\"", method, req)
 
 	resp, err := handler(ctx, req)
@@ -26,4 +26,12 @@ func LoggingInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo
 	}
 
 	return resp, err
+}
+
+func extractRequestMethod(maybeProto any) string {
+	if p, ok := maybeProto.(proto.Message); ok {
+		return string(p.ProtoReflect().Descriptor().FullName())
+	}
+
+	return ""
 }

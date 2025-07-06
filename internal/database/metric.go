@@ -1,9 +1,7 @@
 package database
 
 import (
-	"context"
 	"errors"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -35,60 +33,76 @@ func CreateMetric(db *gorm.DB, deviceID uuid.UUID, metric *devicev1.Metric) (*Me
 		return nil, status.Errorf(codes.Internal, "failed to store metric for device %q: %v", deviceID, result.Error)
 	}
 
+	alertGen.QueueMetric(metricRecord)
 	telemetry.Add(metricRecord.Proto())
-
-	// Run alert checks asynchronously in the background.
-	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-		defer cancel()
-
-		if err := WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-			return checkAndMaybeCreateAlerts(tx, metricRecord)
-		}); err != nil {
-			log.Printf("Failed to check or create alerts for metric record %q: %v", metricRecord.ID, err)
-		}
-	}()
 
 	return metricRecord, nil
 }
 
-// checkAndMaybeCreateAlerts checks if a metric has met alert conditions and creates alerts if needed.
-func checkAndMaybeCreateAlerts(db *gorm.DB, metricRecord *MetricRecord) error {
-	configRecord, err := getDeviceConfig(db, metricRecord.DeviceID)
-	if err != nil {
-		// Skip alert creation since the config cannot be found.
+// checkAndMaybeCreateAlerts checks if metrics have met alert conditions and creates alerts if needed.
+func checkAndMaybeCreateAlerts(db *gorm.DB, metricRecords []*MetricRecord) error {
+	if len(metricRecords) == 0 {
 		return nil
 	}
 
-	// Alerts to be inserted into the database.
+	// Extract unique device IDs from metrics.
+	deviceIDs := make(map[uuid.UUID]bool)
+	for _, metric := range metricRecords {
+		deviceIDs[metric.DeviceID] = true
+	}
+
+	var configs []ConfigRecord
+	deviceIDList := make([]uuid.UUID, 0, len(deviceIDs))
+	for deviceID := range deviceIDs {
+		deviceIDList = append(deviceIDList, deviceID)
+	}
+
+	if err := db.Where("device_id IN ?", deviceIDList).Find(&configs).Error; err != nil {
+		return err
+	}
+
+	// Create a map of device ID to device config.
+	configMap := make(map[uuid.UUID]*ConfigRecord, len(configs))
+	for i := range configs {
+		configMap[configs[i].DeviceID] = &configs[i]
+	}
+
+	// List of alerts to be created, across all devices.
 	var alerts []*AlertRecord
 
-	if metricRecord.Temperature > configRecord.TemperatureThreshold {
-		alerts = append(alerts, &AlertRecord{
-			DeviceID:  metricRecord.DeviceID,
-			Reason:    AlertReason(devicev1.AlertReason_ALERT_REASON_TEMPERATURE),
-			Value:     metricRecord.Temperature,
-			Threshold: configRecord.TemperatureThreshold,
+	// Process each metric and gather alerts
+	for _, metric := range metricRecords {
+		config, ok := configMap[metric.DeviceID]
+		if !ok {
+			continue
+		}
 
-			BaseRecord: BaseRecord{
-				CreatedAt: metricRecord.CreatedAt,
-			},
-		})
+		if metric.Temperature > config.TemperatureThreshold {
+			alerts = append(alerts, &AlertRecord{
+				DeviceID:  metric.DeviceID,
+				Reason:    AlertReason(devicev1.AlertReason_ALERT_REASON_TEMPERATURE),
+				Value:     metric.Temperature,
+				Threshold: config.TemperatureThreshold,
+				BaseRecord: BaseRecord{
+					CreatedAt: metric.CreatedAt,
+				},
+			})
+		}
+
+		if metric.Battery < config.BatteryThreshold {
+			alerts = append(alerts, &AlertRecord{
+				DeviceID:  metric.DeviceID,
+				Reason:    AlertReason(devicev1.AlertReason_ALERT_REASON_BATTERY),
+				Value:     float32(metric.Battery),
+				Threshold: float32(config.BatteryThreshold),
+				BaseRecord: BaseRecord{
+					CreatedAt: metric.CreatedAt,
+				},
+			})
+		}
 	}
 
-	if metricRecord.Battery < configRecord.BatteryThreshold {
-		alerts = append(alerts, &AlertRecord{
-			DeviceID:  metricRecord.DeviceID,
-			Reason:    AlertReason(devicev1.AlertReason_ALERT_REASON_BATTERY),
-			Value:     float32(metricRecord.Battery),
-			Threshold: float32(configRecord.BatteryThreshold),
-
-			BaseRecord: BaseRecord{
-				CreatedAt: metricRecord.CreatedAt,
-			},
-		})
-	}
-
+	// Insert all alerts in a single database operation
 	if len(alerts) > 0 {
 		if err := db.Create(&alerts).Error; err != nil {
 			return err
