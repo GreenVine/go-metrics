@@ -85,7 +85,7 @@ func main() {
 	log.SetPrefix(logPrefix)
 
 	cfg := parseFlags()
-	log.Printf("Starting stresser with %d devices against server %s", cfg.TotalDevices, cfg.Server)
+	log.Printf("Starting stresser with %d devices against server %q", cfg.TotalDevices, cfg.Server)
 
 	// Connect to the gRPC server
 	conn, clientErr := grpc.NewClient(cfg.Server, grpc.WithTransportCredentials(insecure.NewCredentials()))
